@@ -3,6 +3,8 @@ from django.templatetags.static import static
 
 
 from .models import Product
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 
 def banners_list_api(request):
@@ -57,6 +59,8 @@ def product_list_api(request):
     })
 
 
+@api_view(['POST'])
 def register_order(request):
     # TODO это лишь заглушка
     return JsonResponse({})
+        return Response({'status': 'ok', 'order_id': order.id})
