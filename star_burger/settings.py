@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'debug_toolbar',
+    'phonenumber_field',
     'rest_framework',
 ]
 
@@ -101,6 +102,8 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+PHONENUMBER_DEFAULT_REGION = 'RU'
 
 LANGUAGE_CODE = 'ru-RU'
 
