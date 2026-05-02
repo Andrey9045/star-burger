@@ -1,8 +1,8 @@
 from django.http import JsonResponse
 from django.templatetags.static import static
 
-
-from .models import Product
+import json
+from .models import Product, Order, OrderItem
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -58,9 +58,28 @@ def product_list_api(request):
         'indent': 4,
     })
 
-
 @api_view(['POST'])
 def register_order(request):
-    # TODO это лишь заглушка
-    return JsonResponse({})
+    try:
+        order_data = request.data
+        print(order_data)
+        order = Order.objects.create(
+            first_name = order_data['firstname'],
+            last_name = order_data['lastname'],
+            phonenumber = order_data['phonenumber'],
+            address = order_data['address']
+        )
+        for item in order_data ['products']:
+            product = Product.objects.get(id=item['product'])
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=item['quantity'],
+                price=product.price)
         return Response({'status': 'ok', 'order_id': order.id})
+    except KeyError as e:
+        return JsonResponse({'error': f'Missing field: {e}'}, status=400)
+    except Product.DoesNotExist as e:
+        return JsonResponse({'error': str(e)}, status=400)
+    
+#    return JsonResponse({order_data})
