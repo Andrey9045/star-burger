@@ -4,8 +4,28 @@ from django.templatetags.static import static
 import json
 from .models import Product, Order, OrderItem
 from rest_framework.decorators import api_view
+from rest_framework.serializers import ValidationError
+from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ListField
 from rest_framework.response import Response
+import phonenumbers
 
+
+class OrderItemSerializer(ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ['product', 'quantity', 'price']
+
+class OrderSerializer(ModelSerializer):
+    order_items = OrderItemSerializer(many=True, allow_empty=False)
+    class Meta:
+        model = Order
+        fields = ['firstname', 'lastname', 'phonenumber', 'address', 'order_items']
+    def validate_phonenumber(self, value):
+        parsed_phone = phonenumbers.parse(value, 'RU')
+        if not phonenumbers.is_valid_number(parsed_phone):
+            raise ValidationError('Номер телефона не соответствует стандарту')
+        return value
 
 def banners_list_api(request):
     # FIXME move data to db?
@@ -60,26 +80,19 @@ def product_list_api(request):
 
 @api_view(['POST'])
 def register_order(request):
-    try:
-        order_data = request.data
-        print(order_data)
-        order = Order.objects.create(
-            first_name = order_data['firstname'],
-            last_name = order_data['lastname'],
-            phonenumber = order_data['phonenumber'],
-            address = order_data['address']
-        )
-        for item in order_data ['products']:
-            product = Product.objects.get(id=item['product'])
-            OrderItem.objects.create(
-                order=order,
-                product=product,
-                quantity=item['quantity'],
-                price=product.price)
-        return Response({'status': 'ok', 'order_id': order.id})
-    except KeyError as e:
-        return JsonResponse({'error': f'Missing field: {e}'}, status=400)
-    except Product.DoesNotExist as e:
-        return JsonResponse({'error': str(e)}, status=400)
-    
-#    return JsonResponse({order_data})
+    serializer = OrderSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    order = Order.objects.create(
+        first_name = serializer.validated_data['firstname'],
+        last_name = serializer.validated_data['lastname'],
+        phonenumber = serializer.validated_data['phonenumber'],
+        address = serializer.validated_data['address']
+    )
+    for item in serializer.validated_data['order_items']:
+        product = Product.objects.get(id=item['product'])
+        OrderItem.objects.create(
+            order=order,
+            product=product,
+            quantity=item['quantity'],
+            price=product.price)
+    return Response({'status': 'ok', 'order_id': order.id})
