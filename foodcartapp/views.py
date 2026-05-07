@@ -14,13 +14,13 @@ import phonenumbers
 class OrderItemSerializer(ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = ['product', 'quantity', 'price']
+        fields = ['product', 'quantity']
 
 class OrderSerializer(ModelSerializer):
-    order_items = OrderItemSerializer(many=True, allow_empty=False)
+    products = OrderItemSerializer(many=True, allow_empty=False, write_only=True)
     class Meta:
         model = Order
-        fields = ['firstname', 'lastname', 'phonenumber', 'address', 'order_items']
+        fields = ['id', 'firstname', 'lastname', 'phonenumber', 'address', 'products']
     def validate_phonenumber(self, value):
         parsed_phone = phonenumbers.parse(value, 'RU')
         if not phonenumbers.is_valid_number(parsed_phone):
@@ -83,16 +83,17 @@ def register_order(request):
     serializer = OrderSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     order = Order.objects.create(
-        first_name = serializer.validated_data['firstname'],
-        last_name = serializer.validated_data['lastname'],
+        firstname = serializer.validated_data['firstname'],
+        lastname = serializer.validated_data['lastname'],
         phonenumber = serializer.validated_data['phonenumber'],
         address = serializer.validated_data['address']
     )
-    for item in serializer.validated_data['order_items']:
-        product = Product.objects.get(id=item['product'])
+    for item in serializer.validated_data['products']:
+        product = item['product']
         OrderItem.objects.create(
             order=order,
             product=product,
             quantity=item['quantity'],
             price=product.price)
-    return Response({'status': 'ok', 'order_id': order.id})
+    serializer.instance = order
+    return Response(serializer.data)
