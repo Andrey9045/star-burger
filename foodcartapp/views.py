@@ -21,11 +21,51 @@ class OrderSerializer(ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'firstname', 'lastname', 'phonenumber', 'address', 'products']
+
     def validate_phonenumber(self, value):
         parsed_phone = phonenumbers.parse(value, 'RU')
         if not phonenumbers.is_valid_number(parsed_phone):
             raise ValidationError('Номер телефона не соответствует стандарту')
         return value
+
+    def create(self, validated_data):
+        product_data = validated_data.pop('products')
+        order = Order.objects.create(**validated_data)
+        for item in product_data:
+            OrderItem.objects.create(
+                order=order,
+                product=item['product'],
+                quantity=item['quantity'],
+                price=item['product'].price
+            )
+        return order
+
+    def update(self, instance, validated_data):
+        instance.firstname = validated_data.get('firstname', instance.firstname)
+        instance.lastname = validated_data.get('lastname', instance.lastname)
+        instance.phonenumber = validated_data.get('phonenumber', instance.phonenumber)
+        instance.address=validated_data.get('address', instance.address)
+        instance.save()
+        if 'products' in validated_data:
+            instance.items.all().delete()
+            for item in validated_data['products']:
+                OrderItem.objects.create(
+                    order=instance,
+                    product=item['product'],
+                    quantity=item['quantity'],
+                    price=item['producy'].price
+                )
+        return instance
+
+    def update(self, instance, validated_data):
+        instance.firstname = validated_data.get('firstname', instance.firstname)
+        instance.lastname = validated_data.get('lastname', instance.lastname)
+        instance.phonenumber = validated_data.get('phonenumber', instance.phonenumber)
+        instance.address = validated_data.get('address', instance.address)
+        for product in products:
+            instance.product = product['product']
+            instance.quantity = product['quantity']
+            instance.price = product.prise 
 
 def banners_list_api(request):
     # FIXME move data to db?
@@ -82,18 +122,6 @@ def product_list_api(request):
 def register_order(request):
     serializer = OrderSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    order = Order.objects.create(
-        firstname = serializer.validated_data['firstname'],
-        lastname = serializer.validated_data['lastname'],
-        phonenumber = serializer.validated_data['phonenumber'],
-        address = serializer.validated_data['address']
-    )
-    for item in serializer.validated_data['products']:
-        product = item['product']
-        OrderItem.objects.create(
-            order=order,
-            product=product,
-            quantity=item['quantity'],
-            price=product.price)
-    serializer.instance = order
-    return Response(serializer.data)
+    validated = serializer.validated_data
+    order = serializer.save()
+    return Response(OrderSerializer(instance=order).data)
