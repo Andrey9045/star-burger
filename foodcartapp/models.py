@@ -138,7 +138,7 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items',verbose_name='Заказ')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Продукт', related_name='order_items')
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)], verbose_name='Количество')
-    price = models.DecimalField(max_digits=7, decimal_places=2, verbose_name='Цена')
+    price = models.DecimalField(max_digits=7, decimal_places=2, verbose_name='Цена', null=True, blank=True, validators=[MinValueValidator(0, message='Стоимость не может быть отрицательной')])
     class Meta:
         verbose_name = 'Позиция заказа'
         verbose_name_plural = 'Позиции заказа'
