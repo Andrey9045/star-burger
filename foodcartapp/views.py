@@ -9,6 +9,7 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework.serializers import ListField
 from rest_framework.response import Response
 import phonenumbers
+from django.db import transaction
 
 
 class OrderItemSerializer(ModelSerializer):
@@ -53,19 +54,9 @@ class OrderSerializer(ModelSerializer):
                     order=instance,
                     product=item['product'],
                     quantity=item['quantity'],
-                    price=item['producy'].price
+                    price=item['product'].price
                 )
         return instance
-
-    def update(self, instance, validated_data):
-        instance.firstname = validated_data.get('firstname', instance.firstname)
-        instance.lastname = validated_data.get('lastname', instance.lastname)
-        instance.phonenumber = validated_data.get('phonenumber', instance.phonenumber)
-        instance.address = validated_data.get('address', instance.address)
-        for product in products:
-            instance.product = product['product']
-            instance.quantity = product['quantity']
-            instance.price = product.prise 
 
 def banners_list_api(request):
     # FIXME move data to db?
@@ -123,5 +114,6 @@ def register_order(request):
     serializer = OrderSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     validated = serializer.validated_data
-    order = serializer.save()
+    with transaction.atomic():
+        order = serializer.save()
     return Response(OrderSerializer(instance=order).data)
