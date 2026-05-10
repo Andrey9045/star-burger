@@ -96,7 +96,7 @@ def view_orders(request):
     orders = Order.objects.annotate(
         total_price=Sum(
             ExpressionWrapper(
-                F('items__quantity')*F('items__product__price'), 
+                F('items__quantity')*F('items__price'), 
                 output_field=DecimalField(max_digits=7, decimal_places=2)
             )
         )
