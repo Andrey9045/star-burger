@@ -9,6 +9,8 @@ from .models import Restaurant
 from .models import RestaurantMenuItem
 from .models import Order
 from .models import OrderItem
+from django.shortcuts import redirect
+from django.utils.http import url_has_allowed_host_and_scheme
 
 
 class RestaurantMenuItemInline(admin.TabularInline):
@@ -34,17 +36,48 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = (
+    readonly_fields = ('created_at',)
+    fields = (
+        'payment',
         'firstname',
         'lastname',
         'phonenumber',
-        'address'
+        'address',
+        'restaurant',
+        'status',
+        'comment',
+        'created_at',
+        'called_at',
+        'delivered_at',
+    )
+    list_display = (
+        'payment',
+        'created_at',
+        'firstname',
+        'lastname',
+        'phonenumber',
+        'address',
+        'restaurant',
+        'status',
+        'comment',
+        'called_at',
+        'delivered_at',
     )
     search_fields = (
         'phonenumber',
         'address',
     )
+    list_filter = ('status',)
     inlines = [OrderItemInline]
+    def response_change(self, request, obj):
+        next_path = request.GET.get('next')
+        if next_path:
+            if url_has_allowed_host_and_scheme(
+                url=next_path,
+                allowed_hosts={request.get_host()},
+                require_https=request.is_secure(),
+            ):
+                return redirect(next_path)
 
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
