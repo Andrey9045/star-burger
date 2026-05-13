@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
-
+from django.utils.translation import gettext_lazy as _
 
 class Restaurant(models.Model):
     name = models.CharField(
@@ -124,10 +124,31 @@ class RestaurantMenuItem(models.Model):
         return f"{self.restaurant.name} - {self.product.name}"
 
 class Order(models.Model):
+    class Status(models.TextChoices):
+        NEW = 'NEW', _('Новый')
+        CALL = 'CALL', _('Позвонили')
+        COOKING = 'COOKING', _('Готовится')
+        DELIVERING = 'DELIVERING', _('Доставка')
+        COMPLETED = 'COMPLETED', _('Завершен')
+
+    class Payment(models.TextChoices):
+        CASH = 'CASH', _('Наличные')
+        CASHLESS = 'CASHLESS', _('Безнал')
+
+
     firstname = models.CharField(verbose_name = 'Имя', max_length=50)
     lastname = models.CharField(verbose_name = 'Фамилия', max_length=50)
     phonenumber = PhoneNumberField(null=False, blank=False, db_index=True)
     address = models.CharField(max_length=200, verbose_name='Адрес')
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, null=True, blank=True, related_name='orders', verbose_name='Ресторан, который готовит')
+    payment = models.CharField(max_length = 10, choices = Payment.choices, blank=True, null=True, db_index=True, verbose_name='Способ оплаты')
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW, db_index=True, verbose_name='Статус')
+    comment = models.CharField(max_length=200, null=True, blank=True, verbose_name="Комментарий")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Время создания заказа')
+    called_at = models.DateTimeField(null=True, blank=True, db_index=True, verbose_name='Время звонка')
+    delivered_at = models.DateTimeField(null=True, blank=True, db_index=True, verbose_name='Время доставки')
+
+
     class Meta:
         verbose_name = 'Заказ'
         verbose_name_plural = 'Заказы'
