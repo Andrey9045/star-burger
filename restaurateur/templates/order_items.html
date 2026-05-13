@@ -14,20 +14,51 @@
    <table class="table table-responsive">
     <tr>
       <th>ID заказа</th>
+      <th>Способ оплаты</th>
+      <th>Стоимость</th>
       <th>Клиент</th>
       <th>Телефон</th>
+      <th>Комметарий</th>
       <th>Адрес доставки</th>
+      <th>Ресторан</th>
       <th>Ссылка на админку</th>
     </tr>
 
     {% for item in order_items %}
       <tr>
         <td>{{item.id}}</td>
+        <td>{{item.get_payment_display}}
         <td>{{item.total_price}}
         <td>{{item.firstname}} {{item.lastname}}</td>
         <td>{{item.phonenumber}}</td>
+        <td>{{item.comment|default:'-'}}</td>
         <td>{{item.address}}</td>
-        <td><a href='{% url "admin:foodcartapp_order_change" object_id=item.id %}'>админка</a></td>
+        <td>
+          {% if item.restaurant %}
+            Выбран: {{item.restaurant.name}}
+          {% else %}
+            {% if item.suitable_restaurants%}
+              <details>
+                <summary>Могут приготовить({{item.suitable_restaurants|length }})</summary>
+                <ul>
+                  {% for restaurant in item.suitable_restaurants %}
+                    <li>
+                      {{restaurant.name}}
+                      {% if restaurant.distance %}
+                        ({{restaurant.distance|floatformat:1}} км)
+                      {% elif restaurant.distance is None%}
+                        (Расстояние не известно)
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </details>
+            {% else %}
+              Нет подходящих ресторанов
+            {% endif %}
+          {% endif %}
+        </td>
+        <td><a href='{% url "admin:foodcartapp_order_change" object_id=item.id %}?next={{request.get_full_path|urlencode}}'>админка</a></td>
       </tr>
     {% endfor %}
    </table>
