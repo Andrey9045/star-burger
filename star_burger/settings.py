@@ -4,6 +4,11 @@ import dj_database_url
 
 from environs import Env
 
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
 
 env = Env()
 env.read_env()
@@ -82,7 +87,6 @@ WSGI_APPLICATION = 'star_burger.wsgi.application'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-
 DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:////{0}'.format(os.path.join(BASE_DIR, 'db.sqlite3'))
@@ -127,3 +131,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "assets"),
     os.path.join(BASE_DIR, "bundles"),
 ]
+
+
+YANDEX_GEOCODER_API_KEY = os.getenv('YANDEX_GEOCODER_API_KEY')
+if not YANDEX_GEOCODER_API_KEY:
+    raise ValueError("YANDEX_GEOCODER_API_KEY is not set in environment variables")
