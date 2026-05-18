@@ -27,8 +27,14 @@
     {% for item in order_items %}
       <tr>
         <td>{{item.id}}</td>
-        <td>{{item.get_payment_display}}
-        <td>{{item.total_price}}
+        <td>
+          {% if not item.payment %}
+            Не выбран
+          {% else %}
+            {{item.get_payment_display}}
+          {% endif %}
+        </td>
+        <td>{{item.total_price}}</td>
         <td>{{item.firstname}} {{item.lastname}}</td>
         <td>{{item.phonenumber}}</td>
         <td>{{item.comment|default:'-'}}</td>
@@ -37,7 +43,9 @@
           {% if item.restaurant %}
             Выбран: {{item.restaurant.name}}
           {% else %}
-            {% if item.suitable_restaurants%}
+            {% if not item.has_coords %}
+                <span class="text-danger">Адрес не найден</span>
+            {% elif item.suitable_restaurants%}
               <details>
                 <summary>Могут приготовить({{item.suitable_restaurants|length }})</summary>
                 <ul>
