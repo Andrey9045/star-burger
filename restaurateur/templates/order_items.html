@@ -43,18 +43,16 @@
           {% if item.restaurant %}
             Выбран: {{item.restaurant.name}}
           {% else %}
-            {% if not item.has_coords %}
-                <span class="text-danger">Адрес не найден</span>
-            {% elif item.suitable_restaurants%}
+            {% if item.suitable_restaurants %}
               <details>
                 <summary>Могут приготовить({{item.suitable_restaurants|length }})</summary>
                 <ul>
-                  {% for restaurant in item.suitable_restaurants %}
+                  {% for restaurant, dist in item.suitable_restaurants %}
                     <li>
                       {{restaurant.name}}
-                      {% if restaurant.distance %}
-                        ({{restaurant.distance|floatformat:1}} км)
-                      {% elif restaurant.distance is None%}
+                      {% if dist %}
+                        ({{dist|floatformat:1}} км)
+                      {% elif dist is None%}
                         (Расстояние не известно)
                       {% endif %}
                     </li>
