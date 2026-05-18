@@ -2,6 +2,31 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Sum, ExpressionWrapper, F, DecimalField, Prefetch
+
+
+class OrderQuerySet(models.QuerySet):
+    def exclude_completed(self):
+        return self.exclude(status='COMPLETED')  # ← убран пробел
+
+    def with_total_price(self):
+        return self.prefetch_related(
+            Prefetch('items', queryset=OrderItem.objects.select_related('product').only(
+                'id',
+                'product_id',
+                'order',
+                'quantity',
+                'price'
+            ))
+        ).annotate(
+            total_price=Sum(
+                ExpressionWrapper(
+                    F('items__quantity') * F('items__price'),
+                    output_field=DecimalField(max_digits=7, decimal_places=2)
+                )
+            )
+        )
+
 
 class Restaurant(models.Model):
     name = models.CharField(
@@ -123,6 +148,7 @@ class RestaurantMenuItem(models.Model):
     def __str__(self):
         return f"{self.restaurant.name} - {self.product.name}"
 
+
 class Order(models.Model):
     class Status(models.TextChoices):
         NEW = 'NEW', _('Новый')
@@ -135,19 +161,69 @@ class Order(models.Model):
         CASH = 'CASH', _('Наличные')
         CASHLESS = 'CASHLESS', _('Безнал')
 
-
-    firstname = models.CharField(verbose_name = 'Имя', max_length=50)
-    lastname = models.CharField(verbose_name = 'Фамилия', max_length=50)
-    phonenumber = PhoneNumberField(null=False, blank=False, db_index=True)
-    address = models.CharField(max_length=200, verbose_name='Адрес')
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, null=True, blank=True, related_name='orders', verbose_name='Ресторан, который готовит')
-    payment = models.CharField(max_length = 10, choices = Payment.choices, blank=True, null=True, db_index=True, verbose_name='Способ оплаты')
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW, db_index=True, verbose_name='Статус')
-    comment = models.CharField(max_length=200, null=True, blank=True, verbose_name="Комментарий")
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Время создания заказа')
-    called_at = models.DateTimeField(null=True, blank=True, db_index=True, verbose_name='Время звонка')
-    delivered_at = models.DateTimeField(null=True, blank=True, db_index=True, verbose_name='Время доставки')
-
+    firstname = models.CharField(
+        verbose_name='Имя', 
+        max_length=50
+    )
+    lastname = models.CharField(
+        verbose_name='Фамилия', 
+        max_length=50
+    )
+    phonenumber = PhoneNumberField(
+        null=False, 
+        blank=False, 
+        db_index=True
+    )
+    address = models.CharField(
+        max_length=200, 
+        verbose_name='Адрес'
+        )
+    restaurant = models.ForeignKey(
+        Restaurant, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='orders', 
+        verbose_name='Ресторан, который готовит'
+    )
+    payment = models.CharField(
+        max_length = 10, 
+        choices = Payment.choices, 
+        blank=True, 
+        null=True, 
+        db_index=True, 
+        verbose_name='Способ оплаты'
+    )
+    status = models.CharField(
+        max_length=20, 
+        choices=Status.choices, 
+        default=Status.NEW, 
+        db_index=True, 
+        verbose_name='Статус'
+    )
+    comment = models.CharField(
+        max_length=200, 
+        blank=True, 
+        verbose_name="Комментарий"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, 
+        db_index=True, 
+        verbose_name='Время создания заказа'
+    )
+    called_at = models.DateTimeField(
+        null=True, 
+        blank=True, 
+        db_index=True, 
+        verbose_name='Время звонка'
+    )
+    delivered_at = models.DateTimeField(
+        null=True, 
+        blank=True, 
+        db_index=True, 
+        verbose_name='Время доставки'
+    )
+    objects = OrderQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'Заказ'
@@ -155,13 +231,37 @@ class Order(models.Model):
     def __str__(self):
         return f'{self.firstname} - {self.phonenumber}'
 
+
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items',verbose_name='Заказ')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Продукт', related_name='order_items')
-    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)], verbose_name='Количество')
-    price = models.DecimalField(max_digits=7, decimal_places=2, verbose_name='Цена', null=True, blank=True, validators=[MinValueValidator(0, message='Стоимость не может быть отрицательной')])
+    order = models.ForeignKey(
+        Order, 
+        on_delete=models.CASCADE, 
+        related_name='items', 
+        verbose_name='Заказ'
+    )
+    product = models.ForeignKey(
+        Product, 
+        on_delete=models.CASCADE, 
+        verbose_name='Продукт', 
+        related_name='order_items'
+    )
+    quantity = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)], 
+        verbose_name='Количество'
+    )
+    price = models.DecimalField(
+        max_digits=7, 
+        decimal_places=2, 
+        verbose_name='Цена', 
+        null=True, 
+        blank=True, 
+        validators=[MinValueValidator(0, message='Стоимость не может быть отрицательной')]
+    )
+
+
     class Meta:
         verbose_name = 'Позиция заказа'
         verbose_name_plural = 'Позиции заказа'
+
     def __str__(self):
         return f'{self.product.name} * {self.quantity} - {self.price}'
