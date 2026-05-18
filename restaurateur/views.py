@@ -140,20 +140,17 @@ def view_orders(request):
         if loc.lon is not None and loc.lat is not None
     }
     for order in orders:
+        restaurants_with_distance = []
         common_ids = order_restaurant_map.get(order.id, set())
         suitable_restaurants = [restaurant_cache[rid] for rid in common_ids]
         if order.address not in all_orders_addresses:
             address_info = fetch_coordinates(order.address)
             all_orders_addresses.update(address_info)
         order_coords = all_orders_addresses.get(order.address)
-        order.has_coords = order_coords is not None
         if order_coords is None:
-            for restaurant in suitable_restaurants:
-                restaurant.distance = None
-            order.suitable_restaurants = suitable_restaurants
+            restaurants_with_distance = [(restaurant, None) for restaurant in suitable_restaurants]
             continue
 
-        restaurants_with_distance = []
         for restaurant in suitable_restaurants:
             if restaurant.address not in restaurant_coords:
                 coords_info = fetch_coordinates(restaurant.address)
@@ -164,13 +161,14 @@ def view_orders(request):
                     (order_coords[1], order_coords[0]), 
                     (rest_coords[1], rest_coords[0])
                 ).km
-                restaurant.distance = dist
-                restaurants_with_distance.append(restaurant)
+                if dist > 100:
+                    continue
+                restaurants_with_distance.append((restaurant, dist))
             else:
-                restaurant.distance = None
-                restaurants_with_distance.append(restaurant)
+                dist = None
+                restaurants_with_distance.append((restaurant, dist))
         restaurants_with_distance.sort(
-            key=lambda r: r.distance if r.distance is not None else float('inf')
+            key=lambda r: r[1] if r[1] is not None else float('inf')
         )
         order.suitable_restaurants = restaurants_with_distance
 
