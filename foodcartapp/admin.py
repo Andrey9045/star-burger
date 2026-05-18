@@ -69,6 +69,7 @@ class OrderAdmin(admin.ModelAdmin):
     )
     list_filter = ('status',)
     inlines = [OrderItemInline]
+
     def response_change(self, request, obj):
         next_path = request.GET.get('next')
         if next_path:
