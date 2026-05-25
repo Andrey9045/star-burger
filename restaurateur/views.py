@@ -195,6 +195,7 @@ def view_orders(request):
     order_address = orders.values_list('address', flat=True).distinct()
     all_orders_addresses = get_orders_addres_coords(order_address)
     product_to_restourant = get_product_to_restaurant()
+    order_restaurant_map, all_restaurant_ids = build_order_restaurant_map(orders, product_to_restourant)
     return render(request, template_name='order_items.html', context={
         'order_items': orders,
     })
