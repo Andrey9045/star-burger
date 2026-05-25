@@ -68,6 +68,15 @@ def is_manager(user):
     return user.is_staff  # FIXME replace with specific permission
 
 
+def get_product_to_restaurant():
+    all_menu_items = RestaurantMenuItem.objects.select_related(
+        'restaurant', 'product'
+    ).filter(availability=True)
+    product_to_restourant = defaultdict(set)
+    for item in all_menu_items:
+        product_to_restourant[item.product_id].add(item.restaurant_id)
+    return product_to_restourant
+
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_products(request):
     restaurants = list(Restaurant.objects.order_by('name'))
@@ -103,12 +112,14 @@ def view_orders(request):
         loc.address:(loc.lon, loc.lat) 
         for loc in Location.objects.filter(address__in=order_address)
     }
-    all_menu_items = RestaurantMenuItem.objects.select_related(
-        'restaurant', 'product'
-    ).filter(availability=True)
-    product_to_restourant = defaultdict(set)
-    for item in all_menu_items:
-        product_to_restourant[item.product_id].add(item.restaurant_id)
+    #all_menu_items = RestaurantMenuItem.objects.select_related(
+    #    'restaurant', 'product'
+    #).filter(availability=True)
+    #product_to_restourant = defaultdict(set)
+    #for item in all_menu_items:
+    #    product_to_restourant[item.product_id].add(item.restaurant_id)
+
+    product_to_restourant = get_product_to_restaurant()
 
     all_restaurant_ids = set()
     order_restaurant_map = {}
@@ -159,7 +170,7 @@ def view_orders(request):
             if rest_coords:
                 dist = distance.distance(
                     (order_coords[1], order_coords[0]), 
-                    (rest_coords[1], rest_coords[0])
+                    (rest_coords[1], rest_coords[0]) 
                 ).km
                 if dist > 100:
                     continue
