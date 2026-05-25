@@ -79,6 +79,7 @@ class OrderAdmin(admin.ModelAdmin):
                 require_https=request.is_secure(),
             ):
                 return redirect(next_path)
+        return super().response_change(request, obj)
 
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
