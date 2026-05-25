@@ -197,6 +197,7 @@ def view_orders(request):
     product_to_restourant = get_product_to_restaurant()
     order_restaurant_map, all_restaurant_ids = build_order_restaurant_map(orders, product_to_restourant)
     restaurant_cache, restaurant_coords = load_restaurants_with_coords(all_restaurant_ids)
+    annotate_suitable_restaurants_with_restaurants_with_distance(orders, order_restaurant_map, restaurant_cache, all_orders_addresses, restaurant_coords)
     return render(request, template_name='order_items.html', context={
         'order_items': orders,
     })
