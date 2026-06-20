@@ -1,0 +1,9 @@
+server {
+    listen 80;
+    location /media/ {
+        alias /opt/star-burger/media/;  # replace the path with yours one
+    }
+    location /static/ {
+        alias /opt/star-burger/staticfiles/;
+    }
+}
