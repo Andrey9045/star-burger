@@ -1,4 +1,4 @@
-Ссылка на сайт (https://starburgerdevman.ru/)
+Ссылка на сайт https://starburgerdevman.ru/
 # Сайт доставки еды Star Burger
 
 Это сайт сети ресторанов Star Burger. Здесь можно заказать превосходные бургеры с доставкой на дом.
