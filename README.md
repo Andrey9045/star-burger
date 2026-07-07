@@ -1,3 +1,4 @@
+Ссылка на сайт https://starburgerdevman.ru/
 # Сайт доставки еды Star Burger
 
 Это сайт сети ресторанов Star Burger. Здесь можно заказать превосходные бургеры с доставкой на дом.
@@ -58,8 +59,16 @@ pip install -r requirements.txt
 ```sh
 SECRET_KEY=django-insecure-0if40nf4nf93n4
 YANDEX_GEOCODER_API_KEY=4843b584-774b...
+ROLLBAR_ACCESS_TOKEN=ddadb40f595a48ae...
+ROLLBAR_ENVIRONMENT=production
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=your password
+DB_HOST=127.0.0.1
+DB_PORT=5432
 ```
 `YANDEX_GEOCODER_API_KEY` можно получить по [ссылке](https://developer.tech.yandex.ru/services)
+`ROLLBAR_ACCESS_TOKEN` можно получить по [ссылке](https://app.rollbar.com/)
 
 
 Создайте файл базы данных SQLite и отмигрируйте её следующей командой:
