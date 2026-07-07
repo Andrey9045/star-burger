@@ -88,7 +88,9 @@ WSGI_APPLICATION = 'star_burger.wsgi.application'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 DATABASES = {
     'default': dj_database_url.config(
         env='DB_URL',
@@ -138,13 +140,13 @@ STATICFILES_DIRS = [
 ]
 
 ROLLBAR_ACCESS_TOKEN = os.getenv('ROLLBAR_ACCESS_TOKEN')
-ROLLBAR_ENVIRONMENT = os.getenv('ROLLBAR_ENVIRONMENT')
+ROLLBAR_ENVIRONMENT = os.getenv('ROLLBAR_ENVIRONMENT', 'development')
 ROLLBAR = {
     'access_token': os.getenv('ROLLBAR_ACCESS_TOKEN'),
-    'environment': 'development' if DEBUG else 'production',
+    'environment': ROLLBAR_ENVIRONMENT,
     'code_version': os.getenv('GIT_SHA', '1.0.0'),
     'root': BASE_DIR,
-    'enabled': True,
+    'enabled': bool(ROLLBAR_ACCESS_TOKEN),
     'verbose': True,
 }
 YANDEX_GEOCODER_API_KEY = os.getenv('YANDEX_GEOCODER_API_KEY')
