@@ -20,7 +20,7 @@ from django.urls import path, include
 from django.shortcuts import render
 
 from . import settings
-
+#1
 urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
     path('', render, kwargs={'template_name': 'index.html'}, name='start_page'),
