@@ -6,7 +6,7 @@ from environs import Env
 
 from dotenv import load_dotenv
 
-
+#1
 load_dotenv()
 
 
@@ -88,6 +88,7 @@ WSGI_APPLICATION = 'star_burger.wsgi.application'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+SECURE_SSL_REDIRECT = True
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
